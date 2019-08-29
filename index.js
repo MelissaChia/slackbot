@@ -1,4 +1,5 @@
 var Botkit = require("botkit");
+const request = require("request");
 if (!process.env.token) {
   console.log("please specify token in environment");
   process.exit(1);
@@ -84,6 +85,40 @@ controller.hears(["trip"], "direct_message,direct_mention,mention", function(
             finalPrice +
             " and price for per pax per day is " +
             randomPPP
+        );
+      },
+      {},
+      "default"
+    );
+  });
+});
+
+controller.hears(["weather"], "direct_message,direct_mention,mention", function(
+  bot,
+  message
+) {
+  bot.startConversation(message, function(err, convo) {
+    convo.addQuestion(
+      "Where are you at?",
+      function(response, convo) {
+        convo.say("You response is " + response.text);
+
+        request(
+          "https://api.openweathermap.org/data/2.5/weather?q=" +
+            response.text +
+            "&appid=9fd7a449d055dba26a982a3220f32aa2",
+          function(error, response, body) {
+            var jsonBody = JSON.parse(body);
+            var deg = jsonBody["main"]["temp"] - 273.15;
+            convo.say(
+              "The weather is " +
+                jsonBody.weather[0].main +
+                " and the temperature is " +
+                Math.round(deg, 2) +
+                " \xB0C"
+            );
+            convo.next();
+          }
         );
       },
       {},
